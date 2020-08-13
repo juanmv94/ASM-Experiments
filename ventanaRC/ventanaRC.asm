@@ -8,9 +8,10 @@ extern _ExitProcess@4
 global _m
 
 section .data
-sonido db 'WindowsLogoff',0
-adios db 'Adios',0
-buffertexto: resb 128
+sonido db 'DeviceConnect',0
+adios db 'De verdad quieres salir?',0
+mensajetexto db 'texto: '
+buffertexto resb 50
 
 section .text
 _m:
@@ -28,14 +29,17 @@ ret
 logica: ;BOOL CALLBACK DlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 cmp dword [esp+8],16; Message=WM_CLOSE
 jne logicanocerrar
-push dword 0; creamos un dialogo de despedida.
+push dword 0x24; MB_ICONQUESTION|MB_YESNO: preguntamos si queremos salir
 push dword adios
 push dword adios
 push dword 0
 call _MessageBoxA@16
+cmp eax,6; IDYES?
+jne finalsalir
 push dword 0; nResult
 push dword [esp+8]; HWND
 call _EndDialog@8
+finalsalir:
 mov eax,1
 ret
 logicanocerrar:
@@ -52,14 +56,14 @@ ret
 logicanosonido:
 cmp dword [esp+12],1003; wParam=IDIMPRIMIR
 jne logicadefault
-push dword 128; cchMax
+push dword 50; cchMax
 push buffertexto
 push dword 1001; IDTEXTO (resource.h)
 push dword [esp+16]; HWND
 call _GetDlgItemTextA@16
-push dword 0
+push dword 0x40; MB_ICONINFORMATION
 push dword buffertexto
-push dword buffertexto
+push dword mensajetexto
 push dword 0
 call _MessageBoxA@16
 mov eax,1
